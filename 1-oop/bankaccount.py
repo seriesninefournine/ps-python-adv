@@ -1,7 +1,9 @@
 from decimal import Decimal
 class BankAccount:
     accounts = []
-    def __init__(self, owner: str, acc_number: str, balance:float | Decimal | int) -> None:
+    def __init__(self, owner: str, acc_number: str, balance:float | Decimal | int = 0) -> None:
+        if balance < 0:
+            raise ValueError("Невозможно создать счет с отрицательным балансом")
         self.owner = owner
         self.acc_number = acc_number
         self.balance = round(Decimal(balance),2)
@@ -24,7 +26,7 @@ class BankAccount:
         return True
     
 
-    def transferto(self, otheraccount: "BankAccount", amount:float | Decimal):
+    def transfer_to(self, otheraccount: "BankAccount", amount:float | Decimal):
         """Перевод денег на другой счёт BankAccount."""
         amount = round(Decimal(amount),2)
         if self.withdraw(amount):
@@ -49,11 +51,11 @@ acc02 = BankAccount("Иваныч", "ACC202601-001", 123.43)
 print(acc01.info())
 print(acc02.info())
 print("--------------------------")
-acc01.transferto(acc02,200)
+acc01.transfer_to(acc02,200)
 print(acc01.info())
 print(acc02.info())
 print("--------------------------")
-acc01.transferto(acc02,200)
+acc01.transfer_to(acc02,200)
 print(acc01.info())
 print(acc02.info())
 print(acc02.get_accounts_created())
