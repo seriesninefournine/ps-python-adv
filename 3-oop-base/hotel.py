@@ -66,6 +66,19 @@ class Hotel:
     
     def new_booking(self, room_num: int, book_start: date, book_end:date):
         """Бронирование номер по его номеру"""
+        if book_start > book_end:
+            raise ValueError("некорректно заданы даты начала и конца бронирования")
+        if self.is_booked(room_num, book_start) or self.is_booked(room_num, book_end):
+            raise ValueError("На эти даты комната уже забронирована")
+        for book in self.book:
+            if book.canceled: 
+                continue
+            if book.room_num != room_num:
+                continue
+            if book_start < book.book_start < book_end:
+                raise ValueError("На эти даты комната уже забронирована")
+            if book_start < book.book_end < book_end:
+                raise ValueError("На эти даты комната уже забронирована")
         print(f"Номер {room_num} забронирован на c {book_start} по {book_end}")
         self.book.append(Booking(room_num, book_start, book_end))
     
@@ -107,12 +120,12 @@ class Hotel:
                 booked_list.append(book.room_num)
         return [x for x in self.room_list if x not in booked_list] 
     
-    def get_booked_rooms(self) -> dict:
-        result = {}
+    def get_booked_rooms(self) -> list:
+        result = []
         for book in self.book:
             if book.canceled:
                 continue
-            result[book.room_num] = [book.book_start.strftime("%d.%m.%Y"), book.book_end.strftime("%d.%m.%Y")]
+            result.append([book.room_num, book.book_start.strftime("%d.%m.%Y"), book.book_end.strftime("%d.%m.%Y")])
         return result
     
         
