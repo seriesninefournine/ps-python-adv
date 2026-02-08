@@ -8,11 +8,13 @@ class Notification(ABC):
     @abstractmethod
     def send(self, message:str) -> None: ...
 
-class NotifivcationEmail(Notification):
+
+class NotificationEmail(Notification):
     def send(self, message: str) -> None:
         print(f"Оповещение через Email: {message}")
 
-class NotifivcatioSMS(Notification):
+
+class NotificatioSMS(Notification):
     def send(self, message: str) -> None:
         print(f"Оповещение через SMS: {message}")
 
@@ -21,20 +23,24 @@ class NotifivcatioSMS(Notification):
 class Student:
   name: str
 
+class Monitoring(ABC):
+    def __init__(self) -> None:...
+
+    @abstractmethod
+    def report(self, notification: Notification) -> None: ...
+
 
 class Journal:
-    def __init__(self) -> None:
+    def __init__(self, mon: Monitoring) -> None:
         self.grade_list = []
+        self.monitoring = mon
     
     def add_record(self, student: Student, subj: str, grade: int):
         self.grade_list.append((student, subj, grade))
-        Statistic(NotifivcationEmail()).avg_by_student(self, student)
+        mon.report(self, student)
 
 class Statistic:
-    def __init__(self, notification_type: Notification) -> None:
-        self.notification = notification_type
-
-    def avg_by_student(self, journal: Journal, std: Student, send_notification: bool = True) -> Decimal:
+    def avg_by_student(self, journal: Journal, std: Student) -> Decimal:
         total = 0
         count = 0
         for rec in journal.grade_list:
@@ -42,9 +48,16 @@ class Statistic:
                 count += 1
                 total += rec[2]
         avg: Decimal = Decimal(total / count).quantize(Decimal('1.0'))
-        if send_notification and avg < 3.5:
-            self.notification.send(f"Студент {rec[0].name} имеет средний балл {avg}")
-        
+        return avg
+    
+    def avg_by_subject(self, journal: Journal, subj: str) -> Decimal:
+        total = 0
+        count = 0
+        for rec in journal.grade_list:
+            if rec[1] == subj:
+                count += 1
+                total += rec[2]
+        avg: Decimal = Decimal(total / count).quantize(Decimal('1.0'))        
         return avg
     
     def avg_by_all(self, journal: Journal) -> list:
@@ -65,16 +78,22 @@ class Statistic:
         return result
 
 
+class MonitoringLowAVGGrade(Monitoring):
+    def __init__(self, stat: Statistic, notification: Notification) -> None:
+        self.statistic = stat
+        self.notification = notification
+
+    def report(self, jrnl: Journal, std: Student) -> None:
+        if (avg := self.statistic.avg_by_student(jrnl, std)) < 3.5:
+            self.notification.send(f"Студент {std.name} имеет средний балл {avg}")
+
 subject_list = ["Математика", "Русский язык", "Физика", "Физкультура", "Физика"]
 student_list = [Student("Вася"), Student("Петя"), Student("Миша"), Student("Оксана"), Student("Петя")]
 
-jrnl = Journal()
+mon = MonitoringLowAVGGrade(Statistic(),NotificationEmail())
+jrnl = Journal(mon)
 
 for _ in range(10):
     grade_rand = random.randint(2, 5)
     stdnt_rand = random.randint(0, 4)
     jrnl.add_record(student_list[stdnt_rand], subject_list[stdnt_rand], grade_rand)
-
-stat = Statistic(NotifivcationEmail())
-
-print(stat.avg_by_all(jrnl))
