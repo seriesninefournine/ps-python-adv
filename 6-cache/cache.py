@@ -3,9 +3,6 @@ from typing import Optional, TypeVar, Generic, TypeGuard
 T = TypeVar("T")
 R = TypeVar("R")
 
-def is_int(x: object) -> TypeGuard[int]:
-    return isinstance(x, int)
-
 class Cache(Generic[T, R]):
     def __init__(self) -> None:
         self.val_dict: dict[T, R] = {}
@@ -23,16 +20,10 @@ class Cache(Generic[T, R]):
             print(f"Ошибка типа. Переменная {key} имеет тип {type(key)}, а не str")
 
     def keys(self) -> list[T]:
-        tmp_list: list[T] = []
-        for k, _ in self.val_dict.items():
-            tmp_list.append(k)
-        return tmp_list
+        return list(self.val_dict.keys())
 
     def values(self) -> list[R]:
-        tmp_list: list[R] = []
-        for _, v in self.val_dict.items():
-            tmp_list.append(v)
-        return tmp_list
+        return list(self.val_dict.values())
     
 
 hits = Cache[str, int]()
